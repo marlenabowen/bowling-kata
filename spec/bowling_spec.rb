@@ -59,8 +59,8 @@ describe Game do
         game = Game.new
         game.roll(5)
         game.roll(5)
-        game.roll(2)
-        expect(game.final_frame_score).to eq(12)
+        game.roll(10)
+        expect(game.final_frame_score).to eq(20)
       end
 
       it "has only two rolls if neither a strike nor spare was rolled" do
@@ -91,51 +91,77 @@ describe Game do
         expect(game.total_score).to eq(42)
 
         game.roll(10)
+        expect(game.frame_score).to eq('X')
         expect(game.total_score).to eq(42)
 
         game.roll(0)
         game.roll(0)
+        expect(game.frame_score).to eq(0)
         expect(game.total_score).to eq(52)
 
         game.roll(7)
         game.roll(3)
+        expect(game.frame_score).to eq('/')
         expect(game.total_score).to eq(52)
 
         game.roll(1)
         game.roll(0)
+        expect(game.frame_score).to eq(1)
         expect(game.total_score).to eq(64)
 
         game.roll(0)
         game.roll(10)
+        expect(game.frame_score).to eq('/')
         expect(game.total_score).to eq(64)
 
-        game.roll(4)
-        game.roll(4)
-        expect(game.total_score).to eq(86)
+        game.roll(5)
+        game.roll(5)
+        expect(game.frame_score).to eq('/')
+        expect(game.total_score).to eq(79)
 
         game.roll(1)
         game.roll(8)
-        expect(game.total_score).to eq(95)
+        expect(game.final_frame_score).to eq(9)
+        expect(game.total_score).to eq(99)
       end
     end
 
-  #   context "perfect game" do
-  #     it "returns a score of 300" do
-  #       game = Game.new
-  #       game.roll(10)
-  #       game.roll(10)
-  #       game.roll(10)
-  #       game.roll(10)
-  #       game.roll(10)
-  #       game.roll(10)
-  #       game.roll(10)
-  #       game.roll(10)
-  #       game.roll(10)
-  #       game.roll(10)
-  #       game.roll(10)
-  #       game.roll(10)
-  #       expect(game.total_score).to eq(300)
-  #     end
-  #   end
+    context "perfect game" do
+      it "returns a score of 300" do
+        game = Game.new
+        game.roll(10)
+        expect(game.frame_score).to eq('X')
+
+        game.roll(10)
+        expect(game.frame_score).to eq('X')
+
+        game.roll(10)
+        expect(game.frame_score).to eq('X')
+
+        game.roll(10)
+        expect(game.frame_score).to eq('X')
+
+        game.roll(10)
+        expect(game.frame_score).to eq('X')
+
+        game.roll(10)
+        expect(game.frame_score).to eq('X')
+
+        game.roll(10)
+        expect(game.frame_score).to eq('X')
+
+        game.roll(10)
+        expect(game.frame_score).to eq('X')
+
+        game.roll(10)
+        expect(game.frame_score).to eq('X')
+
+        game.roll(10)
+        game.roll(10)
+        game.roll(10)
+        expect(game.final_frame_score).to eq(30)
+        expect(game.total_score).to eq(300)
+      end
+    end
   end
 end
