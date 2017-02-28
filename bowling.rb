@@ -1,7 +1,6 @@
 class Game
   def initialize
     @frame_rolls = []
-    @frame_score = []
     @frames = []
   end
 
@@ -9,58 +8,76 @@ class Game
     @frame_rolls.push(pins)
   end
 
-  def score_for_frame(frame)
-    if frame < 10
-      if @frame_rolls[0] == 10 && !@frame_rolls[1]
-        frame_score = 'X'
-        @frame_score.push(frame_score)
-        result = @frame_score[frame-1]
-      elsif @frame_rolls[0] + @frame_rolls[1] == 10 && !@frame_rolls[2] && @frame_score[frame-1] != 'X'
-        frame_score = '/'
-        @frame_score.push(frame_score)
-        result = @frame_score[frame-1]
-      elsif @frame_rolls[0] + @frame_rolls[1] == 10 && !@frame_rolls[2] && @frame_score[frame-1] == 'X'
-        previous_frame_score = 10 + @frame_rolls[0] + @frame_rolls[1]
-        @frame_score[frame-1] = previous_frame_score
-        current_frame_score = '/'
-        @frame_score.push(current_frame_score)
-        result = @frame_score[frame-1]
-      elsif @frame_score[frame-1] == 'X' && @frame_rolls[0] && @frame_rolls[1]
-        previous_frame_score = 10 + @frame_rolls[0] + @frame_rolls[1]
-        @frame_score[frame-1] = previous_frame_score
-        current_frame_score = @frame_rolls[0] + @frame_rolls[1]
-        @frame_score.push(current_frame_score)
-        result = @frame_score[frame-1]
-      elsif @frame_score[frame-1] == '/' && @frame_rolls[0]
-        previous_frame_score = 10 + @frame_rolls[0]
-        @frame_score[frame-1] = previous_frame_score
-        current_frame_score = @frame_rolls[0] + @frame_rolls[1]
-        @frame_score.push(current_frame_score)
-        result = @frame_score[frame-1]
-      else
-        frame_score = @frame_rolls[0] + @frame_rolls[1]
-        @frame_score.push(frame_score)
-        result = @frame_score[frame-1]
-      end
+  def frame_score
+    print @frame_rolls
+    if @frame_rolls.length == 1
+      frame_score = 'X'
+      @frames.push(frame_score)
+      result = @frames.last
     else
-      if @frame_rolls[0] == 10 || @frame_rolls[0] + @frame_rolls[1] == 10
-        frame_score = @frame_rolls[0] + @frame_rolls[1] + @frame_rolls[2]
-        @frame_score.push(frame_score)
-        result = @frame_score[0]
+      total_pins = @frame_rolls[0] + @frame_rolls[1]
+      last_frame_score = @frames.last
+      if total_pins == 10 && last_frame_score != 'X'
+        frame_score = '/'
+        @frames.push(frame_score)
+        result = @frames.last
+      elsif total_pins == 10 && last_frame_score == 'X'
+        previous_frame_score = 10 + total_pins
+        @frames.pop
+        @frames.push(previous_frame_score)
+        current_frame_score = '/'
+        @frames.push(current_frame_score)
+        result = @frames.last
+      elsif last_frame_score == 'X' && total_pins
+        previous_frame_score = 10 + total_pins
+        @frames.pop
+        @frames.push(previous_frame_score)
+        current_frame_score = total_pins
+        @frames.push(current_frame_score)
+        result = @frames.last
+      elsif last_frame_score == '/'
+        previous_frame_score = 10 + @frame_rolls[0]
+        @frames.pop
+        @frames.push(previous_frame_score)
+        current_frame_score = total_pins
+        @frames.push(current_frame_score)
+        result = @frames.last
       else
-        frame_score = @frame_rolls[0] + @frame_rolls[1]
-        @frame_score.push(frame_score)
-        result = @frame_score.last
+        frame_score = total_pins
+        @frames.push(frame_score)
+        result = @frames.last
       end
     end
     @frame_rolls.clear
     result
   end
 
+  def final_frame_score
+    if @frame_rolls[0] == 10 || @frame_rolls[0] + @frame_rolls[1] == 10
+      frame_score = @frame_rolls[0] + @frame_rolls[1] + @frame_rolls[2]
+      @frames.push(frame_score)
+      result = @frames[0]
+    else
+      frame_score = @frame_rolls[0] + @frame_rolls[1]
+      @frames.push(frame_score)
+      result = @frames.last
+    end
+  end
+
   def total_score
-    ## if last score is '/' or 'X', return sum of all scores before that
-    ## else return sum of all scores
-    @frame_score
+    print "start", @frames
+    if @frames.last == 'X' || '/'
+      print "one", @frames
+      @frames.pop()
+      print "two", @frames
+      @frames.inject(0) { |sum,x| sum + x }
+      print "three", @frames
+      return @frames[0]
+    else
+      print "four", @frames
+      @frames.inject(0) { |sum,x| sum + x }
+      return @frames[0]
+    end
   end
 end
 
