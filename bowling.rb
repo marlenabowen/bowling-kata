@@ -1,7 +1,7 @@
 class Game
   def initialize
     @frame_rolls = []
-    @frames = []
+    @frames_scores = []
   end
 
   def roll(pins)
@@ -9,66 +9,41 @@ class Game
   end
 
   def frame_score
-    number_of_frames = @frames.length
-    if @frame_rolls.length == 1 && @frames.last != 'X'
-      frame_score = 'X'
-      @frames.push(frame_score)
-      result = @frames.last
-    elsif @frame_rolls.length == 1 && @frames.last == 'X' && (@frames[number_of_frames-2] != 20)
-      previous_frame_score = 20
-      @frames.pop
-      @frames.push(previous_frame_score)
-      current_frame_score = 'X'
-      @frames.push(current_frame_score)
-      result = @frames.last
-    elsif @frame_rolls.length == 1 && @frames.last == 'X' && (@frames[number_of_frames-2] == 20)
-      score_from_two_frames_ago = 30
-      previous_frame_score = 20
-      @frames.pop
-      @frames.pop
-      @frames.push(score_from_two_frames_ago)
-      @frames.push(previous_frame_score)
-      current_frame_score = 'X'
-      @frames.push(current_frame_score)
-      result = @frames.last
-    else
-      total_pins = @frame_rolls[0] + @frame_rolls[1]
-      last_frame_score = @frames.last
-      if total_pins == 10 && (last_frame_score != 'X' && last_frame_score != '/')
-        frame_score = '/'
-        @frames.push(frame_score)
-        result = @frames.last
-      elsif total_pins == 10 && last_frame_score == 'X'
-        @frames.pop
-        @frames.push(20)
-        current_frame_score = '/'
-        @frames.push(current_frame_score)
-        result = @frames.last
-      elsif total_pins == 10 && last_frame_score == '/'
-        previous_frame_score = 10 + @frame_rolls[0]
-        @frames.pop
-        @frames.push(previous_frame_score)
-        current_frame_score = '/'
-        @frames.push(current_frame_score)
-        result = @frames.last
-      elsif last_frame_score == 'X' && total_pins
-        previous_frame_score = 10 + total_pins
-        @frames.pop
-        @frames.push(previous_frame_score)
-        current_frame_score = total_pins
-        @frames.push(current_frame_score)
-        result = @frames.last
-      elsif last_frame_score == '/'
-        previous_frame_score = 10 + @frame_rolls[0]
-        @frames.pop
-        @frames.push(previous_frame_score)
-        current_frame_score = total_pins
-        @frames.push(current_frame_score)
-        result = @frames.last
+    number_of_frames = @frames_scores.length
+    if @frame_rolls.length == 1
+      if @frames_scores.last == 'X'
+        if @frames_scores[number_of_frames-2] == 20
+          @frames_scores.pop
+          @frames_scores.pop
+          @frames_scores.push(30)
+          @frames_scores.push(20)
+          result = update_frames_scores('X')
+        else
+          result = handle_previous_frame_score(20, 'X')
+        end
       else
-        frame_score = total_pins
-        @frames.push(frame_score)
-        result = @frames.last
+        result = update_frames_scores('X')
+      end
+    else
+      spare = 10 + @frame_rolls[0]
+      two_rolls = @frame_rolls[0] + @frame_rolls[1]
+      last_frame_score = @frames_scores.last
+      if two_rolls == 10
+        if last_frame_score == 'X'
+          result = handle_previous_frame_score(20, '/')
+        elsif last_frame_score == '/'
+          result = handle_previous_frame_score(spare, '/')
+        else
+          result = update_frames_scores('/')
+        end
+      elsif last_frame_score == 'X'
+        @frames_scores.pop
+        @frames_scores.push(10 + two_rolls)
+        result = handle_previous_frame_score(spare, two_rolls)
+      elsif last_frame_score == '/'
+        result = handle_previous_frame_score(spare, two_rolls)
+      else
+        result = update_frames_scores(two_rolls)
       end
     end
     @frame_rolls.clear
@@ -76,78 +51,52 @@ class Game
   end
 
   def final_frame_score
-    first_two_rolls = @frame_rolls[0] + @frame_rolls[1]
-    number_of_frames = @frames.length
-    if @frames.last == 'X'
-      if @frame_rolls[0] == 10
-        if @frames[number_of_frames-2] == 20
-          @frames.pop
-          @frames.pop
-          @frames.push(30)
-          @frames.push(30)
-          frame_score = @frame_rolls[0] + @frame_rolls [1] + @frame_rolls[2]
-          @frames.push(frame_score)
-          result = @frames.last
-        else
-          @frames.pop
-          @frames.push(20)
-          frame_score = @frame_rolls[0] + @frame_rolls [1] + @frame_rolls[2]
-          @frames.push(frame_score)
-          result = @frames.last
-        end
-      elsif first_two_rolls == 10
-        @frames.pop
-        @frames.push(20)
-        frame_score = @frame_rolls[0] + @frame_rolls [1] + @frame_rolls[2]
-        @frames.push(frame_score)
-        result = @frames.last
+    number_of_frames = @frames_scores.length
+    spare = 10 + @frame_rolls[0]
+    two_rolls = @frame_rolls[0] + @frame_rolls[1]
+    last_frame_score = @frames_scores.last
+    if last_frame_score == 'X' && @frame_rolls[0] == 10 && @frames_scores[number_of_frames-2] == 20
+        @frames_scores.pop
+        @frames_scores.pop
+        @frames_scores.push(30)
+        @frames_scores.push(30)
+        update_frames_scores(two_rolls + @frame_rolls[2])
+    elsif last_frame_score == '/'
+      if @frame_rolls[0] == 10 || two_rolls == 10
+        handle_previous_frame_score(spare, two_rolls + @frame_rolls[2])
       else
-        @frames.pop
-        @frames.push(10 + @frame_rolls[0])
-        frame_score = @frame_rolls[0] + @frame_rolls [1]
-        @frames.push(frame_score)
-        result = @frames.last
-      end
-    elsif @frames.last == '/'
-      if (@frame_rolls[0] == 10 || first_two_rolls == 10)
-        @frames.pop
-        previous_frame_score = 10 + @frame_rolls[0]
-        @frames.push(previous_frame_score)
-        frame_score = @frame_rolls[0] + @frame_rolls [1] + @frame_rolls[2]
-        @frames.push(frame_score)
-        result = @frames.last
-      else
-        @frames.pop
-        previous_frame_score = 10 + @frame_rolls[0]
-        @frames.push(previous_frame_score)
-        frame_score = @frame_rolls[0] + @frame_rolls[1]
-        @frames.push(frame_score)
-        result = @frames.last
+        handle_previous_frame_score(spare, two_rolls)
       end
     else
-      if (@frame_rolls[0] == 10 || first_two_rolls == 10)
-        frame_score = first_two_rolls + @frame_rolls[2]
-        @frames.push(frame_score)
-        result = @frames.last
+      if @frame_rolls[0] == 10 || two_rolls == 10
+        update_frames_scores(two_rolls + @frame_rolls[2])
       else
-        frame_score = first_two_rolls
-        @frames.push(frame_score)
-        result = @frames.last
+        update_frames_scores(two_rolls)
       end
     end
-    return result
   end
 
   def total_score
-    number_of_frames = @frames.length
-    if (@frames.last != 'X' && @frames.last != '/') && (@frames[number_of_frames-2] != 'X' && @frames[number_of_frames-2] != '/')
-      result = @frames.inject(0) { |sum,x| sum + x }
+    number_of_frames = @frames_scores.length
+    if (@frames_scores.last != 'X' && @frames_scores.last != '/') && (@frames_scores[number_of_frames-2] != 'X' && @frames_scores[number_of_frames-2] != '/')
+      result = @frames_scores.inject(0) { |sum,x| sum + x }
     else
-      last = @frames.pop()
-      result = @frames.inject(0) { |sum,x| sum + x }
-      @frames.push(last)
+      last = @frames_scores.pop()
+      result = @frames_scores.inject(0) { |sum,x| sum + x }
+      @frames_scores.push(last)
     end
-    return result
+    result
+  end
+
+  def update_frames_scores(frame_score)
+    @frames_scores.push(frame_score)
+    @frames_scores.last
+  end
+
+  def handle_previous_frame_score(previous_frame_score, current_frame_score)
+    @frames_scores.pop
+    @frames_scores.push(previous_frame_score)
+    update_frames_scores(current_frame_score)
   end
 end
 
