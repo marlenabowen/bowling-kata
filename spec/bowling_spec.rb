@@ -134,12 +134,15 @@ describe Game do
 
         game.roll(10)
         expect(game.frame_score).to eq('X')
+        expect(game.total_score).to eq(20)
 
         game.roll(10)
         expect(game.frame_score).to eq('X')
+        expect(game.total_score).to eq(50)
 
         game.roll(10)
         expect(game.frame_score).to eq('X')
+        expect(game.total_score).to eq(80)
 
         game.roll(10)
         expect(game.frame_score).to eq('X')

@@ -1,4 +1,4 @@
-class Game
+ class Game
   def initialize
     @frame_rolls = []
     @frames_scores = []
@@ -9,86 +9,48 @@ class Game
   end
 
   def frame_score
-    number_of_frames = @frames_scores.length
-    last_frame_score = @frames_scores.last
-    if @frame_rolls[0] == 10 # if this frame is a strike
-      if last_frame_score == 'X' # if the last frame is a strike
-        if @frames_scores[number_of_frames-2] == 20 # if the frame before the last frame was a strike
-          @frames_scores.pop
-          @frames_scores.pop
-          @frames_scores.push(30)
-          @frames_scores.push(20)
-          result = update_frames_scores('X')
-        else # if the frame before the last frame was not a strike
-          result = handle_previous_frame_score(20, 'X')
-        end
-      else # if the last frame was not a strike
-        result = update_frames_scores('X')
-      end
-    else # if this frame is not a strike
-      spare = 10 + @frame_rolls[0]
-      two_rolls = @frame_rolls[0] + @frame_rolls[1]
-      if two_rolls == 10 # if this frame is a spare
-        if last_frame_score == 'X' # if the last frame was a strike
-          result = handle_previous_frame_score(20, '/')
-        elsif last_frame_score == '/' # if the last frame was a spare
-          result = handle_previous_frame_score(spare, '/')
-        else # if the last frame was not a strike or a spare
-          result = update_frames_scores('/')
-        end
-      elsif last_frame_score == 'X' # if the last frame was a strike
-        @frames_scores.pop
-        @frames_scores.push(10 + two_rolls)
-        result = handle_previous_frame_score(spare, two_rolls)
-      elsif last_frame_score == '/' # the last frame was a spare
-        result = handle_previous_frame_score(spare, two_rolls)
-      else # if the last frame was not a strike or a spare
-        result = update_frames_scores(two_rolls)
-      end
+    if current_frame_strike?
+      result = handle_strike_in_current_frame('typical frame')
+    elsif current_frame_spare?
+      result = handle_spare_in_current_frame
+     else
+      result = handle_current_frame
     end
     @frame_rolls.clear
     result
   end
 
   def final_frame_score
-    number_of_frames = @frames_scores.length
-    spare = 10 + @frame_rolls[0]
-    two_rolls = @frame_rolls[0] + @frame_rolls[1]
-    last_frame_score = @frames_scores.last
-    if last_frame_score == 'X' # if strike in last frame
-      if @frame_rolls[0] == 10 # and if first roll of final frame is a strike
-        if @frames_scores[number_of_frames-2] == 20 # and if a strike was also rolled in the frame before the last frame
-          @frames_scores.pop
-          @frames_scores.pop
-          @frames_scores.push(30)
-          @frames_scores.push(30)
-          update_frames_scores(two_rolls + @frame_rolls[2])
-        else # or if a strike was not bowled in the frame before the last frame
-          handle_previous_frame_score(20, two_rolls + @frame_rolls[2])
+    if previous_frame_strike?
+      if current_frame_strike?
+        if frame_before_previous_is_strike?
+          handle_three_strikes_in_a_row('final frame')
+        else
+          handle_previous_frame_score(20, @frame_rolls[0] + @frame_rolls[1] + @frame_rolls[2])
         end
-      elsif two_rolls == 10 # or if a strike was bowled in the final frame
-        handle_previous_frame_score(20, two_rolls + @frame_rolls[2])
-      else # or if neither a strike nor a spare was bowled in the final frame
-        handle_previous_frame_score(10 + two_rolls, two_rolls)
-      end
-    elsif last_frame_score == '/' # or if the last frame was a spare
-      if @frame_rolls[0] == 10 || two_rolls == 10 # and if the final frame includes a strike or spare
-        handle_previous_frame_score(spare, two_rolls + @frame_rolls[2])
-      else # or if the final frame does not include a strike or spare
-        handle_previous_frame_score(spare, two_rolls)
-      end
-    else # or if the last frame was not a strike or spare
-      if @frame_rolls[0] == 10 || two_rolls == 10
-        update_frames_scores(two_rolls + @frame_rolls[2])
+      elsif current_frame_spare?
+        handle_previous_frame_score(20, @frame_rolls[0] + @frame_rolls[1] + @frame_rolls[2])
       else
-        update_frames_scores(two_rolls)
+        handle_previous_frame_score(10 + @frame_rolls[0] + @frame_rolls[1], @frame_rolls[0] + @frame_rolls[1])
+      end
+    elsif previous_frame_spare?
+      if current_frame_strike? || current_frame_spare?
+        handle_previous_frame_score(10 + @frame_rolls[0], @frame_rolls[0] + @frame_rolls[1] + @frame_rolls[2])
+      else
+        handle_previous_frame_score(10 + @frame_rolls[0], @frame_rolls[0] + @frame_rolls[1])
+      end
+    else
+      if current_frame_strike? || current_frame_spare?
+        update_frames_scores(@frame_rolls[0] + @frame_rolls[1] + @frame_rolls[2])
+      else
+        update_frames_scores(@frame_rolls[0] + @frame_rolls[1])
       end
     end
   end
 
   def total_score
     number_of_frames = @frames_scores.length
-    if @frames_scores.last == 'X' # if the last frame was a strike
+    if previous_frame_strike?
       @frames_scores.pop
       if @frames_scores[number_of_frames-2] == 'X' # and if the frame before the last frame was a strike
         result = update_total_score(30)
@@ -114,6 +76,55 @@ class Game
     result
   end
 
+  private
+
+  def handle_strike_in_current_frame(frame)
+    if previous_frame_strike?
+      if frame_before_previous_is_strike?
+        handle_three_strikes_in_a_row(frame)
+      else
+        handle_previous_frame_score(20, 'X')
+      end
+    else
+      update_frames_scores('X')
+    end
+  end
+
+  def handle_spare_in_current_frame
+    if previous_frame_strike?
+      handle_previous_frame_score(20, '/')
+    elsif previous_frame_spare?
+      handle_previous_frame_score(10 + @frame_rolls[0], '/')
+    else
+      update_frames_scores('/')
+    end
+  end
+
+  def handle_current_frame
+    first_roll = @frame_rolls[0]
+    score_for_current_frame = first_roll + @frame_rolls[1]
+    if previous_frame_strike?
+      handle_score_after_strike
+    elsif previous_frame_spare?
+      handle_previous_frame_score(10 + first_roll, score_for_current_frame)
+    else
+      update_frames_scores(score_for_current_frame)
+    end
+  end
+
+  def handle_three_strikes_in_a_row(frame)
+    @frames_scores.pop
+    @frames_scores.pop
+    @frames_scores.push(30)
+    if frame == 'final frame'
+      @frames_scores.push(30)
+      update_frames_scores(@frame_rolls[0] + @frame_rolls[1] + @frame_rolls[2])
+    else
+      @frames_scores.push(20)
+      update_frames_scores('X')
+    end
+  end
+
   def update_frames_scores(frame_score)
     @frames_scores.push(frame_score)
     @frames_scores.last
@@ -129,6 +140,35 @@ class Game
     @frames_scores.pop
     @frames_scores.push(previous_frame_score)
     update_frames_scores(current_frame_score)
+  end
+
+  def handle_score_after_strike
+    score_for_current_frame = @frame_rolls[0] + @frame_rolls[1]
+    @frames_scores.pop
+    @frames_scores.push(10 + score_for_current_frame)
+    @frames_scores.push(score_for_current_frame)
+    @frames_scores.last
+  end
+
+  def current_frame_strike?
+    @frame_rolls[0] == 10
+  end
+
+  def current_frame_spare?
+    @frame_rolls[0] + @frame_rolls[1] == 10
+  end
+
+  def previous_frame_strike?
+    @frames_scores.last == 'X'
+  end
+
+  def previous_frame_spare?
+    @frames_scores.last == '/'
+  end
+
+  def frame_before_previous_is_strike?
+    number_of_frames = @frames_scores.length
+    @frames_scores[number_of_frames-2] == 20
   end
 end
 
