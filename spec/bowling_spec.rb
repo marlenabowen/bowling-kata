@@ -114,15 +114,15 @@ describe Game do
         expect(game.frame_score).to eq('/')
         expect(game.total_score).to eq(64)
 
-        game.roll(5)
-        game.roll(5)
-        expect(game.frame_score).to eq('/')
-        expect(game.total_score).to eq(79)
+        game.roll(10)
+        game.roll(0)
+        expect(game.frame_score).to eq('X')
+        expect(game.total_score).to eq(84)
 
         game.roll(1)
         game.roll(8)
         expect(game.final_frame_score).to eq(9)
-        expect(game.total_score).to eq(99)
+        expect(game.total_score).to eq(112)
       end
     end
 
