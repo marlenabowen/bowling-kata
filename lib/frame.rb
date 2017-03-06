@@ -1,13 +1,13 @@
 class Frame
   attr_accessor :rolls
-  attr_reader :type
+  attr_reader :is_final
 
   STRIKE = 'X'.freeze
   SPARE = '/'.freeze
 
-  def initialize(type)
+  def initialize(is_final = false)
     @rolls = []
-    @type = type
+    @is_final = is_final
   end
 
   def add_roll(roll)

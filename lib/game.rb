@@ -1,5 +1,4 @@
 class Game
-  FINAL = 'final frame'.freeze
   STRIKE = 'X'.freeze
   SPARE = '/'.freeze
 
@@ -51,7 +50,7 @@ class Game
   end
 
   def frame_score_for_strike_or_spare(frame)
-    if frame.type == FINAL
+    if frame.is_final
       score = frame.rolls.first + frame.rolls[1] + frame.rolls[2]
     else
       score = frame.score
@@ -103,7 +102,7 @@ class Game
   def three_strikes_in_a_row(frame)
     @frame_scores.pop
     update_total_score(30)
-    if frame.type == FINAL
+    if frame.is_final
       @frame_scores += [30, (frame.rolls.first + frame.rolls[1] + frame.rolls[2])]
     else
       @frame_scores += [20, STRIKE]
