@@ -1,6 +1,13 @@
 class Frame
-  def initialize
+  attr_accessor :rolls
+  attr_reader :type
+
+  STRIKE = 'X'.freeze
+  SPARE = '/'.freeze
+
+  def initialize(type)
     @rolls = []
+    @type = type
   end
 
   def add_roll(roll)
@@ -8,8 +15,12 @@ class Frame
   end
 
   def score
-  end
-
-  def end_frame
+    if @rolls.first == 10
+      STRIKE
+    elsif @rolls.first + @rolls[1] == 10
+      SPARE
+    else
+      @rolls.first + @rolls[1]
+    end
   end
 end
